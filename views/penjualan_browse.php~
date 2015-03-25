@@ -1,0 +1,274 @@
+<?php
+	$session_user = $this->session->userdata('session_user');
+	$userHak = $session_user['hak'];
+?>
+<?php $jmlCek = count($penjualan); ?>
+
+<?php
+	if (!empty($q)){
+		pagging($total_halaman);
+	}
+
+	$a_ref = array('NN','SE','WB','IG','WP','SM','TM','PG','CC');
+?>
+
+<?echo form_open('penjualan/generate/', array('method' => 'get'));?>
+<table width="100%" class="tbl" cellspacing1="0">
+	<thead style="background-color:white;">
+	<tr>
+		<th class="td-head">No</th>
+		<th class="td-head" style="width:10px;"><input type="checkbox" onclick="seleksi(this.checked,<?php echo $jmlCek; ?>,'cek');"></th>
+		<th class="td-head" style="width:75px;">Tanggal</th>
+		<th class="td-head" colspan="4" width="*">Uraian</th>
+		<?php
+			if ($userHak <= 50 ){
+		?>
+		<th class="td-head">H. Beli</th>
+		<th class="td-head">Biaya</th>
+		<?php } ?>
+		<th class="td-head">H. Jual</th>
+		<?php
+			if ($userHak <= 50 ){
+		?>
+		<th class="td-head">Laba</th>
+		<?php } ?>
+		<th class="td-head">Nama</th>
+		<!--<th class="td-head">Alamat</th>
+		<th class="td-head">Eks</th>-->
+		<th class="td-head" style="width:50px;" colspan="2">No. Resi</th>
+		<th class="td-head" style="width:40px;"colspan="4">*</th>
+	</tr>
+	</thead>
+	<tbody>
+<?
+
+	foreach ($penjualan as $row){
+		switch ($row->id_web) {
+			case '2':
+				$web_style = 'color:#062D55;font1-weight:bold;';
+				break;
+			case '1':
+				$web_style = 'color:007FFF;font1-weight:bold;';
+				break;
+			case '3':
+				$web_style = 'color:#D52438;font1-weight:bold;';
+				break;
+			case '6':
+				$web_style = 'color:#D52438;font1-weight:bold;';
+				break;
+			case '9':
+				$web_style = 'color:#291C16;font1-weight:bold;';
+				break;
+			case '10':
+				$web_style = 'color:#000000;font1-weight:bold;';
+				break;
+                        case '13':
+                                $web_style = 'color:#640189;font1-weight:bold;';
+                                break;
+                        case '8':
+                                $web_style = 'color:#007E1E;font1-weight:bold;';
+                                break;
+                        case '5':
+                                $web_style = 'color:#330606;font1-weight:bold;';
+                                break;
+                        case '7':
+                                $web_style = 'color:#ED7524;font1-weight:bold;';
+                                break;
+                       case '4':
+                                $web_style = 'color:#062D55;font1-weight:bold;';
+                                break;
+
+		}
+
+		// BANK
+		$wbank = $row->warna;
+		if (empty($wbank)){
+			if ($row->penjualan_bank == -1){
+				$wbank = 'FF0000';
+				$bank_title = 'title="TUNAI"';
+			} else {
+                                $wbank = 'B5A900';
+                                $bank_title = 'title="TRANSAKSI DI SUPPLIER"';
+			}
+		} else {
+			$bank_title = 'title = "' .$row->bank.' : '.$row->norek_cantik.' (' .$row->atas_nama.')"';
+		}
+		
+
+		$w_bank =  $bank_title . ' style="color:' .$wbank. ';font-weight:bold;"';
+		// status style //
+		if ($row->status == 2){
+			$status_style = 'text-decoration: line-through;';
+		} else {
+			$status_style = '';
+		}
+
+		$i += 1;
+
+		if ($i == 1){
+			$tglWarna = date('d',strtotime($row->tanggal));
+			$classTd = 'td-kecil';
+			$classTr = 'tr-normal';
+		} else {
+			$tglBanding = date('d',strtotime($row->tanggal));
+			if ($tglBanding != $tglWarna){
+				if ($classTd == 'td-kecil'){
+					$classTd = 'td-kecil-odd';
+					$classTr = 'tr-odd';
+				} else {
+					$classTd = 'td-kecil';
+					$classTr = 'tr-normal';
+				}
+			}
+			$tglWarna = date('d',strtotime($row->tanggal));
+		}
+
+		echo '<tr id="tr' .$i. '" class="' .$classTr. '">';
+			echo '<td class="' .$classTd. '" style="text-align:right;">' .$i. '</td>';
+			$tglTampil =  date('d-m-Y',strtotime($row->tanggal));
+			$nHari = date('N',strtotime($row->tanggal));
+			if ($nHari>=6){
+				$merah = 'style="color:red;"';
+			} else {
+				$merah = '';
+			}
+
+			// cekbox & tanggal //
+			echo '<td class="' .$classTd. '"><input type="checkbox" name="cek[]" id="cek' .$i. '" value="' .$row->id. '" onchange="warna(this.checked,\'' .'tr' . $i. '\',\'' .$classTr. '\');"></td>';
+			echo '<td class="' .$classTd. '">' .anchor('penjualan/browse?tgl1=' .$tglTampil. '&tgl2=' .$tglTampil,$tglTampil,$merah). '</td>';
+
+			// uraian //
+			switch ($row->status) {
+				case 0:
+					$status_img = 'assets/images/status/normal.png';
+					break;
+				case 2:
+					$status_img = array('src'=>'assets/images/status/batal.png','alt'=>$row->catatan_status,'title'=>$row->catatan_status);
+					break;
+				default:
+					$status_img = array('src'=>'assets/images/status/pending.png','alt'=>$row->catatan_status,'title'=>$row->catatan_status);
+					break;
+			}
+
+			if (!empty($row->keterangan)){
+				$uraian_keterangan = strtoupper($row->uraian . ' (<b><i style="' .$web_style. '">' . $row->keterangan . '</i></b>)');
+			} else {
+				$uraian_keterangan = strtoupper($row->uraian);
+			}
+			
+
+			// INDEX KUALITAS TRANSAKSI //
+			if ($row->kualitas_transaksi <= 10.0){
+				$style_kualitas = 'style="color:#002B8B;font-weight:bold;"';
+			}
+
+			if ($row->kualitas_transaksi <= 5.0){
+				$style_kualitas = 'style="color:#006700;font-weight:bold;"';
+			}
+
+			if ($row->kualitas_transaksi <= 3.5){
+				$style_kualitas = 'style="color:#8C3800"';
+			}
+
+			$kualitas_transaksi = '<u ' .$style_kualitas. '>' .$row->kualitas_transaksi. '</u>';
+			$ref_transaksi = $a_ref[$row->ref];
+
+			if ($row->ref == 7){
+				$ref_pg += 1;
+			}
+
+			echo '<td class="' .$classTd. '" style="width:10px;">' .anchor('penjualan/edit_status/'.$row->id,img($status_img)). '</td>';
+			echo '<td class="' .$classTd. '" style="width:10px;text-align:center;">' .anchor('penjualan/edit_kualitas/'.$row->id,$kualitas_transaksi). '</td>';
+			echo '<td class="' .$classTd. '" style="width:10px;text-align:center;">' .anchor('penjualan/edit_ref/'.$row->id,$ref_transaksi). '</td>';
+			echo '<td class="' .$classTd. '" style="cursor:pointer;" onclick="bantuCek(\'cek' .$i. '\');">' .anchor('penjualan/detail/'.$row->id,$uraian_keterangan,'style="' .$web_style. '"'). '</td>';
+			if ($userHak <= 50 ){
+				echo '<td class="' .$classTd. '" style="text-align:right;width:100px;' .$status_style. '">' .number_format($row->harga_beli,0,',','.'). '</td>';
+				echo '<td class="' .$classTd. '" style="text-align:right;width:100px;' .$status_style. '">' .number_format($row->biaya,0,',','.'). '</td>';
+			}
+			echo '<td class="' .$classTd. '" style="text-align:right;width:100px;">' .anchor('penjualan/browse?tgl1=' .$tglTampil. '&tgl2=' .$tglTampil.'&bank='.$row->penjualan_bank,number_format($row->harga_jual,0,',','.'),$w_bank . $status_style). '</td>';
+			if ($userHak <= 50 ){
+				echo '<td class="' .$classTd. '" style="text-align:right;width:100px;' .$status_style. '">' .number_format(($row->harga_jual-$row->harga_beli-$row->biaya),0,',','.'). '</td>';
+			}
+			$conversation = site_url() . '/sms/conversation/' .$row->nomer;
+			echo '<td class="' .$classTd. '"><a target="_blank" href="' .$conversation. '" title="' .$row->alamat. '">' .$row->nama. '</a></td>';
+			//echo '<td class="td-kecil">' .$row->alamat. '</td>';
+			//echo '<td class="td-kecil">' .$row->ekspedisi. '</td>';
+
+			if ($row->ekspedisi=='JNE'){
+				$no_resi = '<a target="_blank" href="http://www.jne.co.id/index.php?mib=tracking.detail&awb=' .$row->no_resi. '&awb_list=' .$row->no_resi. ',">' .$row->no_resi. '</a>';
+			} else {
+				$no_resi = $row->no_resi;
+			}
+			if ($row->kirim_resi){
+				echo '<td class="' .$classTd. '" style="width:20px;">' .anchor('penjualan/kirim_resi/'.$row->id,img(array('src'=>'assets/images/resend.png','title'=>'Kirim Ulang Resi'))). '</td>';
+			} else {
+				echo '<td class="' .$classTd. '" style="width:20px;">' .anchor('penjualan/kirim_resi/'.$row->id,img(array('src'=>'assets/images/send.png','title'=>'Kirim Resi'))). '</td>';
+			}
+			echo '<td class="' .$classTd. '" style="text-align:center;width:60px;">' .$no_resi. '</td>';
+
+			echo '<td class="' .$classTd. '" style="width:20px;">' .anchor('penjualan/edit_resi/'.$row->id,img('assets/images/resi.png')). '</td>';
+			echo '<td class="' .$classTd. '" style="width:20px;">' .anchor('penjualan/form/'.$row->id,img('assets/images/edit.png')). '</td>';
+			echo '<td class="' .$classTd. '" style="width:20px;">' .anchor('penjualan/delete/'.$row->id,img('assets/images/delete.png')). '</td>';
+
+			// TOTAL //
+			if ($row->status != 2){
+				$totHJual += $row->harga_jual;
+				$totHBeli += $row->harga_beli;
+				$totBiaya += $row->biaya;
+			}
+
+			// TOTAL KUALITAS TRANSAKSI //
+			$tot_kualitas += $row->kualitas_transaksi;
+
+		echo '</tr>';
+	}
+	$laba = $totHJual - $totHBeli - $totBiaya;
+	$persen = round($laba/$totHJual*100,2)
+?>
+
+<tr>
+	<td class="td-total" colspan="4"><?php echo '(' .round($i/$jml_pbk_new*100). '%) ' . $jml_pbk_new . ' Kontak Baru'; ?></td>
+	<td class="td-total"><?php echo number_format(round($tot_kualitas/$i,1),1); ?></td>
+	<td class="td-total" colspan="2" style="text-align:center;">PG : <?php echo $ref_pg . '(' . round($ref_pg/$i*100) . '%)' ; ?></td>
+	<?php
+		if ($userHak <= 50 ){
+	?>
+	<td class="td-total" style="text-align:right;"><? echo number_format($totHBeli,0,',','.'); ?></td>
+	<td class="td-total" style="text-align:right;"><? echo number_format($totBiaya,0,',','.'); ?></td>
+	<?php } ?>
+	<td class="td-total" style="text-align:right;"><? echo number_format($totHJual,0,',','.'); ?></td>
+	<?php
+		if ($userHak <= 50 ){
+	?>
+	<td class="td-total" style="text-align:right;"><? echo number_format($laba,0,',','.'); ?></td>
+	<?php } ?>
+	<td class="td-total" colspan="6">&nbsp;</td>
+</tr>
+<tr>
+	<td class="td-action" colspan="<? echo ($userHak <= 50?'17':'16'); ?>"><input type="submit" value="Buat Proses + Rincian"></td>
+</tr>
+</tbody>
+</table>
+<? echo form_close(); ?>
+
+<script>
+function seleksi(val,jml,awal){
+	for (i=1;i<=jml;i++){
+		var cekId = awal + i;
+		document.getElementById(cekId).checked = val;
+		document.getElementById(cekId).onchange();
+	}
+}
+
+function warna(val,id,classDefault){
+	if (val == true){
+		document.getElementById(id).setAttribute("class", "tr-checked");
+	} else {
+		document.getElementById(id).setAttribute("class", classDefault);
+	}
+}
+
+function bantuCek(id){
+	document.getElementById(id).click();
+}
+</script>
